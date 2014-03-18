@@ -1,6 +1,7 @@
 #include <iostream>
 using namespace std;
 
+#include <math.h>
 #include "modelFunctions.cpp"
 #include "cameraFunctions.cpp"
 #if defined(__APPLE__)
@@ -28,7 +29,7 @@ const int NUM_EXPECTED_PARAMETERS = 2;
 
 /** GLOBAL VARIABLES **/
 double ANGLE_X, ANGLE_Y, ANGLE_Z;
-double SCALE, ROTATION_FACTOR;
+double SCALE, ROTATION_FACTOR, SPHERE_RAD;
 unsigned char MODE;
 int LAST_MOUSE_X, LAST_MOUSE_Y;
 
@@ -77,6 +78,7 @@ void usage() {
     cout << endl;
     cout << "Usage: file_with_model" << endl;
 }
+
 
 /**
   * Paint the axes of current object
@@ -148,13 +150,13 @@ void refresh () {
  * @param width New width of window
  */
 void onResize(int height, int width) {
-    double relX = (double)width/(double)(START_WIDTH);
-    double relY = (double)height/(double)(START_HEIGHT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-relY, relY, -relX, relX, -1, 1);
-    setMatrixMode();
-    glViewport(0, 0, height, width);
+//    double relX = (double)width/(double)(START_WIDTH);
+//    double relY = (double)height/(double)(START_HEIGHT);
+//    glMatrixMode(GL_PROJECTION);
+//    glLoadIdentity();
+//    glOrtho(-relY, relY, -relX, relX, -1, 1);
+//    gluPerspective();
+//    glViewport(0, 0, height, width);
 }
 
 void onMouseClick(int buton, int evnt, int x, int y) {
@@ -197,10 +199,10 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
         case 'p':   changeCameraMode();
                     glutPostRedisplay();
                     break;
-	case 'i':   initCamera();
+        case 'i':   initCamera();
                     setCameraMatrix();
-	            glutPostRedisplay();
-	            break;
+                    glutPostRedisplay();
+                    break;
         case (char)27:  close();
                         break;
     }
@@ -212,6 +214,18 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
 
 /* ---------------------- INITIAL CALCS --------------------- */
 
+Point calcVRP(Point min, Point max) {
+    Point ret;
+    ret.x = (max.x + min.x)*0.5;
+    ret.y = (max.y + min.y)*0.5;
+    ret.z = (max.z + min.z)*0.5;
+    return ret;
+}
+
+double calcMinSphereRadius(Point min, Point max) {
+    return sqrt((max.x - min.x)*(max.x - min.x) + (max.y - min.y)*(max.y - min.y) + (max.z - min.z)*(max.z - min.z))*0.5;
+}
+
 /**
   * Initializate the Global variables of the program
   */
@@ -219,11 +233,6 @@ void initGlobalVars() {
     SCALE = 1.0;
     ROTATION_FACTOR = 10.0;
     MODE = 'r';
-
-    INIT_MODEL_HEIGHT = 0.5;
-    TRANS_X = 0.75;
-    TRANS_Y = -0.4 + INIT_MODEL_HEIGHT/2.0;
-    TRANS_Z = 0.75;
 }
 
 /**
@@ -270,8 +279,12 @@ int main(int argc, const char *argv[]) {
     // Initialization of global variables
     initCamera();
     initGlobalVars();
-    loadModel(argv[1]);
-    calcModelVars();
+    Point p1 = {0.75, -0.4 + 0.25, 0.75};
+    loadModel(argv[1], 0.5, p1);
+    Point p2;
+    getScaledPoints(p1, p2);
+    SPHERE_RAD = calcMinSphereRadius(p1, p2);
+    cout << SPHERE_RAD << endl;
     setCameraMatrix();
 
     // GLUT events loop

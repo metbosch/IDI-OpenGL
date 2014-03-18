@@ -27,6 +27,7 @@ Model model;
 double REF_TRANS_X, REF_TRANS_Y, REF_TRANS_Z, SCALE_REF;
 double TRANS_X, TRANS_Y, TRANS_Z;
 double INIT_MODEL_HEIGHT;
+Point MAX_POINT, MIN_POINT;
 
 /* ------------------ AUXILIAR FUNCTIONS ------------------*/
 
@@ -48,12 +49,55 @@ double max (double a, double b, double c) {
 /* -------------- END OF AUXILIAR FUNCTIONS ---------------*/
 
 /**
-  * Load the model contained in a file
-  * Param file: String with the name of continer file of model
+  * Get the two vertex of minimum container box od model
   */
-void loadModel(string file) {
+void calcExtremsModelVertex(Point &min, Point &max) {
+    vector<Vertex> vertex = model.vertices();
+    if (vertex.size() > 2) {
+        min.x = max.x = vertex[0];
+        min.y = max.y = vertex[1];
+        min.z = max.z = vertex[2];
+    }
+    for (int i = 3; i < vertex.size(); i += 3) {
+        if (min.x > vertex[i]) min.x = vertex[i];
+        else if (max.x < vertex[i]) max.x = vertex[i];
+
+        if (min.y > vertex[i + 1]) min.y = vertex[i + 1];
+        else if (max.y < vertex[i + 1]) max.y = vertex[i + 1];
+
+        if (min.z > vertex[i + 2]) min.z = vertex[i + 2];
+        else if (max.z < vertex[i + 2]) max.z = vertex[i + 2];
+    }
+}
+
+/**
+ * Calculates the initial scale and translation for model
+ */
+void calcModelVars() {
+    calcExtremsModelVertex(MIN_POINT, MAX_POINT);
+
+    SCALE_REF = INIT_MODEL_HEIGHT/max(MAX_POINT.x - MIN_POINT.x, MAX_POINT.y - MIN_POINT.y,
+                    MAX_POINT.z - MIN_POINT.z);
+    REF_TRANS_X = -(MIN_POINT.x + MAX_POINT.x)/2.0;
+    REF_TRANS_Y = -(MIN_POINT.y + MAX_POINT.y)/2.0;
+    REF_TRANS_Z = -(MIN_POINT.z + MAX_POINT.z)/2.0;
+}
+
+/**
+  * Load the model contained in a file and calc the associated variables
+  * @param file String with the name of continer file of model
+  * @param height Desired final height for the model
+  * @param place Desifed final Point of model
+  */
+void loadModel(string file, double height, Point place) {
+    INIT_MODEL_HEIGHT = height;
+    TRANS_X = place.x;
+    TRANS_Y = place.y;
+    TRANS_Z = place.z;
+
     model = Model();
     model.load(file);
+    calcModelVars();
 }
 
 /**
@@ -83,40 +127,13 @@ void paintModel() {
     glPopMatrix();
 }
 
-/**
-  * Get the two vertex of minimum container box od model
-  */
-void getExtremsModelVertex(Point &min, Point &max) {
-    vector<Vertex> vertex = model.vertices();
-    if (vertex.size() > 2) {
-        min.x = max.x = vertex[0];
-        min.y = max.y = vertex[1];
-        min.z = max.z = vertex[2];
-    }
-    for (int i = 3; i < vertex.size(); i += 3) {
-        if (min.x > vertex[i]) min.x = vertex[i];
-        else if (max.x < vertex[i]) max.x = vertex[i];
-
-        if (min.y > vertex[i + 1]) min.y = vertex[i + 1];
-        else if (max.y < vertex[i + 1]) max.y = vertex[i + 1];
-
-        if (min.z > vertex[i + 2]) min.z = vertex[i + 2];
-        else if (max.z < vertex[i + 2]) max.z = vertex[i + 2];
-    }
-}
-
-/**
- * Calculates the initial scale and translation for model
- */
-void calcModelVars() {
-    Point model_min, model_max;
-    getExtremsModelVertex(model_min, model_max);
-
-    SCALE_REF = INIT_MODEL_HEIGHT/max(model_max.x - model_min.x, model_max.y - model_min.y,
-                    model_max.z - model_min.z);
-    REF_TRANS_X = -(model_min.x + model_max.x)/2.0;
-    REF_TRANS_Y = -(model_min.y + model_max.y)/2.0;
-    REF_TRANS_Z = -(model_min.z + model_max.z)/2.0;
+void getScaledPoints(Point &ret_min, Point &ret_max) {
+    ret_min.x = MIN_POINT.x*SCALE_REF;
+    ret_max.x = MAX_POINT.x*SCALE_REF;
+    ret_min.y = MIN_POINT.y*SCALE_REF;
+    ret_max.y = MAX_POINT.y*SCALE_REF;
+    ret_min.z = MIN_POINT.z*SCALE_REF;
+    ret_max.z = MAX_POINT.z*SCALE_REF;
 }
 
 #endif

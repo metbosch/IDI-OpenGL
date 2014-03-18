@@ -20,13 +20,22 @@ struct Point {
 #endif
 
 /** CONSTATS VALUES **/
-const int CAM_MODES[] = {GL_MODELVIEW, GL_PROJECTION};
+const string CAM_MODES[] = {"PERSPECTIVE", "AXONOMETRIC"};
 
 /** CAMERA VARIABLES **/
 double CAM_ANGLE_X, CAM_ANGLE_Y, CAM_ANGLE_Z;
 double DIST;
 Point VRP;
 unsigned char CAM_MODE;
+
+/**
+  * Set Glut Matrix Mode according to current value
+  */
+void setMatrixMode() {
+
+
+	glMatrixMode(CAM_MODES[CAM_MODE]);
+}
 
 /**
   * Set in the stack top a new Matrix according to current values
@@ -40,20 +49,15 @@ void setCameraMatrix() {
     glTranslated(-VRP.x, -VRP.y, -VRP.z);
 }
 
-/**
-  * Set Glut Matrix Mode according to current value
-  */
-void setMatrixMode() {
-	glMatrixMode(CAM_MODES[CAM_MODE]);
-}
+
+
 
 /**
   * Change Glut Matrix Mode. Possible values are: GL_MODELVIEW and GL_PROJECTION
   */
 void changeCameraMode() {
-	++CAM_MODE;
+    ++CAM_MODE;
     CAM_MODE %= (sizeof(CAM_MODES)/sizeof(*CAM_MODES));
-    glMatrixMode(CAM_MODES[CAM_MODE]);
 }
 
 /**
@@ -115,12 +119,32 @@ void incrementEulerAngles(double x_cam, double y_cam, double z_cam) {
 }
 
 /**
-  * Move the VRP the with the specified values
+  * Set the VRP the with the specified values
   */
+void setVRP(double x_move, double y_move, double z_move) {
+    VRP.x = x_move;
+    VRP.y = y_move;
+    VRP.z = z_move;
+}
+
+/**
+ * Move the VRP the with the specified values
+ * @param x_move Move value for x axis
+ * @param y_move Move value for y axis
+ * @param z_move Move value for z axis
+ */
 void moveVRP(double x_move, double y_move, double z_move) {
     VRP.x += x_move;
     VRP.y += y_move;
     VRP.z += z_move;
+}
+
+/**
+  * Set the dist between camera and VRP
+  * @param d Distance to be setted
+  */
+void setDist(double d) {
+    DIST = d;
 }
 
 #endif
