@@ -56,6 +56,8 @@ void help() {
     cout << " Set the precision of rotation mode" << endl;
     cout << "  -> Press '+' to increment the rotation speed" << endl;
     cout << "  -> Press '-' to decrement the rotation speed" << endl;
+    cout << " Reset the program to starting camera position" << endl;
+    cout << "  -> Press 'i' to reset" << endl;
     cout << " Press ESC to exit" << endl;
     cout << "-------------------------------------------------------" << endl;
 }
@@ -195,6 +197,10 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
         case 'p':   changeCameraMode();
                     glutPostRedisplay();
                     break;
+	case 'i':   initCamera();
+                    setCameraMatrix();
+	            glutPostRedisplay();
+	            break;
         case (char)27:  close();
                         break;
     }
