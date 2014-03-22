@@ -2,6 +2,7 @@
 using namespace std;
 
 #include <math.h>
+#include <Vector>
 #include "modelFunctions.cpp"
 #include "cameraFunctions.cpp"
 #if defined(__APPLE__)
@@ -23,6 +24,10 @@ struct Point {
 #endif
 
 /** PROGRAM CONSTATNS **/
+#define model0_height 1
+#define model1_height 1.5
+const Point model0_place = {0, 0.5, 0};
+const Point model1_place = {2.5, 0.75, -2.5};
 const int START_HEIGHT = 600;
 const int START_WIDTH  = 600;
 const int NUM_EXPECTED_PARAMETERS = 2;
@@ -32,6 +37,7 @@ double ANGLE_X, ANGLE_Y, ANGLE_Z;
 double SCALE, ROTATION_FACTOR, SPHERE_RAD;
 unsigned char MODE;
 int LAST_MOUSE_X, LAST_MOUSE_Y;
+vector <ModelLoader> models;
 
 
 /**
@@ -56,12 +62,14 @@ void help() {
     cout << "  -> Press 's' to display" << endl;
     cout << " Set the response of mouse events on window" << endl;
     cout << "  -> Press 'r' to set camera rotation mode" << endl;
-//    cout << "  -> Press 't' to set translation mode" << endl;
     cout << " Set the precision of rotation mode" << endl;
     cout << "  -> Press '+' to increment the rotation speed" << endl;
     cout << "  -> Press '-' to decrement the rotation speed" << endl;
     cout << " Reset the program to starting camera position" << endl;
     cout << "  -> Press 'i' to reset" << endl;
+    cout << " Zoom in/out of camera optic" << endl;
+    cout << "  -> Press 'o' to make zoom-out" << endl;
+    cout << "  -> Press 'l' to make zoom-in" << endl;
     cout << " Press ESC to exit" << endl;
     cout << "-------------------------------------------------------" << endl;
 }
@@ -105,26 +113,36 @@ void paintAxes() {
 
 void paintFloor() {
     glBegin(GL_QUADS);
-        glColor3f (0.545, 0.271, 0.075);
-        glVertex3f( 0.75, -0.4, 0.75);
-        glVertex3f( 0.75, -0.4,-0.75);
-        glVertex3f(-0.75, -0.4,-0.75);
-        glVertex3f(-0.75, -0.4, 0.75);
+        glColor3f (1, 0.3, 0);
+        glVertex3f( 5, 0, 5);
+        glVertex3f(-5, 0, 5);
+        glVertex3f(-5, 0,-5);
+        glVertex3f( 5, 0,-5);
     glEnd();
 }
 
-void paintSnowMan() {
+void paintWalls() {
     glPushMatrix();
+        glColor3f(0.0, 1.0, 0.0);
+        glTranslated(2.5, 0.75, -2.5);
+        glScaled(20, 7.5, 1);
+        glutSolidCube(0.2);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3f(0.0, 1.0, 0.0);
+        glTranslated(-4.9, 0.75, 0);
+        glScaled(1, 7.5, 50);
+        glutSolidCube(0.2);
+    glPopMatrix();
+}
+
+void paintSnowMan(Point center) {
+    glPushMatrix();
+        glTranslated(center.x, center.y + 0.4, center.z);
         glColor3f(1.0, 1.0, 1.0);
-        glPushMatrix();
-            glRotated(90, 1, 0, 0);
-            glutSolidSphere(0.4, 20, 20);
-        glPopMatrix();
+        glutSolidSphere(0.4, 20, 20);
         glTranslated(0.0, 0.6, 0.0);
-        glPushMatrix();
-            glRotated(90, 1, 0, 0);
-            glutSolidSphere(0.2, 50, 50);
-        glPopMatrix();
+        glutSolidSphere(0.2, 20, 20);
         glColor3f(1.0, 0.5, 0.0);
         glTranslated(0.1, 0.0, 0.0);
         glRotated(90, 0, 1, 0);
@@ -140,8 +158,12 @@ void refresh () {
         glRotated(0, 1, 0, 0);
         glScaled(SCALE, SCALE, SCALE);
         paintFloor();
-        paintSnowMan();
-        paintModel();
+        paintWalls();
+        paintSnowMan({ 2.5, 0, 2.5});
+        paintSnowMan({-2.5, 0, 2.5});
+        paintSnowMan({-2.5, 0,-2.5});
+        models[0].draw();
+        models[1].draw();
         glColor4f(0.0, 0.0, 0.5, 0.1);
         glutWireSphere(SPHERE_RAD, 20, 20);
     glPopMatrix();
@@ -178,9 +200,6 @@ void onMouseMotion(int x, int y) {
         case 't':   SCALE = x >= width - y ? (double)((x)*2.0/height) :
                                              (double)((width - (y))*2.0/width);
                     break;
-        case 'c':   TRANS_Z += (2.0*(y - LAST_MOUSE_Y))/(double)height;
-                    TRANS_X += (2.0*(x - LAST_MOUSE_X))/(double)width;
-                    break;
     }
     LAST_MOUSE_X = x;
     LAST_MOUSE_Y = y;
@@ -216,6 +235,14 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
                     updateCamera(height, width);
                     glutPostRedisplay();
                     break;
+        case 'o':   zoomOut();
+                    updateCamera(height, width);
+                    glutPostRedisplay();
+                    break;
+        case 'l':   zoomIn();
+                    updateCamera(height, width);
+                    glutPostRedisplay();
+                    break;
         case (char)27:  close();
                         break;
     }
@@ -240,13 +267,14 @@ double calcMinContainerBoxScene(Point &min, Point &max) {
     Point maxs[num_els - 1];
     Point mins[num_els - 1];
     // Get min and max points for all the elements on the scene
-    getScaledPoints(min, max);
-    mins[0].x = -0.75;
-    mins[0].y = -0.4;
-    mins[0].z = -0.75;
-    maxs[0].x = 0.75;
-    maxs[0].y = -0.4;
-    maxs[0].z = 0.75;
+    models[0].getBoxPoints(min, max);
+    models[2].getBoxPoints(mins[2], maxs[2]);
+    mins[0].x = -5;
+    mins[0].y = 0.0;
+    mins[0].z = -5;
+    maxs[0].x = 5;
+    maxs[0].y = 0.0;
+    maxs[0].z = 5;
 
     mins[1].x = -0.4;
     mins[1].y = -0.4;
@@ -273,10 +301,13 @@ double calcMinSphereRadius() {
 /**
   * Initializate the Global variables of the program
   */
-void initGlobalVars() {
+void initGlobalVars(const char *argv[]) {
     SCALE = 1.0;
     ROTATION_FACTOR = 15.0;
     MODE = 'r';
+    models.push_back(ModelLoader(argv[1], model0_height, model0_place));
+    models.push_back(ModelLoader(argv[1], model1_height, model1_place));
+    models[1].setAngles(0, 90, 0);
     SPHERE_RAD = calcMinSphereRadius();
 }
 
@@ -316,9 +347,7 @@ int main(int argc, const char *argv[]) {
     initGL();
 
     // Initialization of global variables
-    Point p1 = {0.75, -0.4 + 0.25, 0.75};
-    loadModel(argv[1], 0.5, p1);
-    initGlobalVars();
+    initGlobalVars(argv);
     initCamera(SPHERE_RAD);
     setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
     setCameraMatrix();

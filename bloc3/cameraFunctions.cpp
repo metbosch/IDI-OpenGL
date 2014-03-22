@@ -26,7 +26,7 @@ struct r {
 
 /** CAMERA VARIABLES **/
 double CAM_ANGLE_X, CAM_ANGLE_Y, CAM_ANGLE_Z;
-double DIST, RADIUS, HEIGHT, WIDTH;
+double DIST, RADIUS, HEIGHT, WIDTH, ZOOM;
 double zNear = 0.001;
 double zFar = 10;
 Point VRP;
@@ -45,27 +45,26 @@ void setCameraMatrix() {
 }
 
 void updateCamera(double new_height, double new_width) {
-    cout << new_height << " " << new_width << endl;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     if (CAM_MODE) {
         if (new_width/new_height <= 1) {
             double tmp = (RADIUS*new_height/new_width); 
-            glOrtho(-RADIUS, RADIUS, -tmp, tmp, zNear, zFar);
+            glOrtho(-RADIUS*ZOOM, RADIUS*ZOOM, -tmp*ZOOM, tmp*ZOOM, zNear, zFar);
         }
         else {
             double tmp = (RADIUS*new_width/new_height); 
-            glOrtho(-tmp, tmp, -RADIUS, RADIUS, zNear, zFar);
+            glOrtho(-tmp*ZOOM, tmp*ZOOM, -RADIUS*ZOOM, RADIUS*ZOOM, zNear, zFar);
         }
     }
     else {
         if (new_width/new_height < 1) {
             double aperture = atan(RADIUS/(DIST*new_width))*360.0/PI;
-            gluPerspective(aperture, new_width/new_height, zNear, zFar);
+            gluPerspective(aperture*ZOOM, new_width/new_height, zNear, zFar);
         }
         else {
             double aperture = asin(RADIUS/DIST)*360.0/PI;
-            gluPerspective(aperture, new_width/new_height, zNear, zFar);
+            gluPerspective(aperture*ZOOM, new_width/new_height, zNear, zFar);
         }
     }
     glMatrixMode(GL_MODELVIEW);
@@ -103,24 +102,22 @@ void initCamera(double rad) {
     VRP.y = 0.0;
     VRP.z = 0.0;
     RADIUS = rad;
+    ZOOM = 1.0;
 }
 
 /**
   * Initializate the camera variables to specified values
   */
-void initCamera(double x_cam, double y_cam, double z_cam,
-                double x_vrp, double y_vrp, double z_vrp,
-                double rad) {
+void initCamera(double x_cam, double y_cam, double z_cam, Point vrp, double rad) {
     glMatrixMode(GL_MODELVIEW);
     CAM_MODE = 1;
     DIST = 0.1;
     CAM_ANGLE_Y = y_cam;
     CAM_ANGLE_Z = z_cam;
     CAM_ANGLE_X = x_cam;
-    VRP.x = x_vrp;
-    VRP.y = y_vrp;
-    VRP.z = z_vrp;
+    VRP = vrp;
     RADIUS = rad;
+    ZOOM = 1.0;
 }
 
 /**
@@ -192,6 +189,14 @@ double getCamAperture() {
   else {
       return asin(RADIUS/DIST)*360.0/PI;
   }
+}
+
+void zoomIn() {
+  ZOOM *= 0.9;
+}
+
+void zoomOut() {
+  ZOOM *= 1.1;
 }
 
 #endif
