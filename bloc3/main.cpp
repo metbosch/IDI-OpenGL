@@ -47,8 +47,11 @@ void close() {
 void help() {
     cout << endl;
     cout << "---------------> >> HELP INFORMATION << <--------------" << endl;
-    cout << " Change camera mode [prespectiva | axonometrica]" << endl;
+    cout << " Change camera mode [orto | presp]" << endl;
     cout << "  -> Press 'p' to change" << endl;
+    cout << " Change the dist behind VRP and camera" << endl;
+    cout << "  -> Press 'm' to redouce dist" << endl;
+    cout << "  -> Press 'n' to increase dist" << endl;
     cout << " Print status information" << endl;
     cout << "  -> Press 's' to display" << endl;
     cout << " Set the response of mouse events on window" << endl;
@@ -69,7 +72,9 @@ void help() {
 void status() {
     cout << endl;
     cout << "--------------------> >> STATUS << <-------------------" << endl;
-    cout << " Camera mode : " << getStrCameraMode() << endl;    
+    cout << " Camera mode    : " << getStrCameraMode() << endl;   
+    cout << " Camera dist    : " << getCamDist() << endl;
+    cout << " Camera aperture: " << getCamAperture() << endl;
     cout << " Rotation factor: " << ROTATION_FACTOR << " [Def. 15]"<< endl;
     cout << "-------------------------------------------------------" << endl;
 }
@@ -151,7 +156,7 @@ void refresh () {
 void onResize(int height, int width) {
     double relX = (double)width/(double)(START_WIDTH);
     double relY = (double)height/(double)(START_HEIGHT);
-    updateCamera(SPHERE_RAD*relX, SPHERE_RAD*relY);
+    updateCamera(relX, relY);
     glViewport(0, 0, height, width);
 }
 
@@ -183,6 +188,8 @@ void onMouseMotion(int x, int y) {
 }
 
 void onKeyboardPulse(unsigned char key, int x, int y) {
+    float height = glutGet(GLUT_WINDOW_HEIGHT)/(double)(START_HEIGHT);
+    float width  = glutGet(GLUT_WINDOW_WIDTH)/(double)(START_WIDTH);
     switch (key) {
         case 'h':   help();
                     break;
@@ -196,7 +203,17 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
                     glutPostRedisplay();
                     break;
         case 'i':   initCamera(SPHERE_RAD);
+                    setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
+                    updateCamera(height, width);
                     setCameraMatrix();
+                    glutPostRedisplay();
+                    break;
+        case 'm':   incrementCamDist(SPHERE_RAD/15);
+                    updateCamera(height, width);
+                    glutPostRedisplay();
+                    break;
+        case 'n':   incrementCamDist(-SPHERE_RAD/15);
+                    updateCamera(height, width);
                     glutPostRedisplay();
                     break;
         case (char)27:  close();
@@ -238,9 +255,6 @@ double calcMinContainerBoxScene(Point &min, Point &max) {
     maxs[1].y = 0.8;
     maxs[1].z = 0.4;
     for (int i = 0; i < num_els - 1; ++i) {
-    cout << min.x << " " << min.y << " " << min.z << endl;
-    cout << max.x << " " << max.y << " " << max.z << endl;
-        cout << i << endl;
         if (mins[i].x < min.x) min.x = mins[i].x;
         if (maxs[i].x > max.x) max.x = maxs[i].x;
         if (mins[i].y < min.y) min.y = mins[i].y;
@@ -253,8 +267,6 @@ double calcMinContainerBoxScene(Point &min, Point &max) {
 double calcMinSphereRadius() {
     Point max, min;
     calcMinContainerBoxScene(min, max);
-    cout << min.x << " " << min.y << " " << min.z << endl;
-    cout << max.x << " " << max.y << " " << max.z << endl;
     return sqrt((max.x - min.x)*(max.x - min.x) + (max.y - min.y)*(max.y - min.y) + (max.z - min.z)*(max.z - min.z))*0.5;
 }
 
@@ -265,6 +277,7 @@ void initGlobalVars() {
     SCALE = 1.0;
     ROTATION_FACTOR = 15.0;
     MODE = 'r';
+    SPHERE_RAD = calcMinSphereRadius();
 }
 
 /**
@@ -303,12 +316,9 @@ int main(int argc, const char *argv[]) {
     initGL();
 
     // Initialization of global variables
-    initGlobalVars();
     Point p1 = {0.75, -0.4 + 0.25, 0.75};
     loadModel(argv[1], 0.5, p1);
-    Point p2;
-    SPHERE_RAD = calcMinSphereRadius();
-    cout << SPHERE_RAD << endl;
+    initGlobalVars();
     initCamera(SPHERE_RAD);
     setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
     setCameraMatrix();

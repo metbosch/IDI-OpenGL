@@ -22,7 +22,7 @@ struct r {
 #endif
 
 /** CONSTATS VALUES **/
-#define PI atan(1)*4
+#define PI (3.14159)
 
 /** CAMERA VARIABLES **/
 double CAM_ANGLE_X, CAM_ANGLE_Y, CAM_ANGLE_Z;
@@ -45,27 +45,30 @@ void setCameraMatrix() {
 }
 
 void updateCamera(double new_height, double new_width) {
-  if (CAM_MODE) {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
+    cout << new_height << " " << new_width << endl;
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    if (CAM_MODE) {
         if (new_width/new_height <= 1) {
-            double tmp = ( RADIUS * new_height / new_width); 
+            double tmp = (RADIUS*new_height/new_width); 
             glOrtho(-RADIUS, RADIUS, -tmp, tmp, zNear, zFar);
         }
         else {
-            double tmp = ( RADIUS * new_width / new_height); 
+            double tmp = (RADIUS*new_width/new_height); 
             glOrtho(-tmp, tmp, -RADIUS, RADIUS, zNear, zFar);
         }
-        glMatrixMode(GL_MODELVIEW);
     }
     else {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        double aperture = asin(RADIUS/DIST);
-        aperture *= 360.0/PI;
-        gluPerspective(aperture, new_width/new_height, zNear, zFar);
-        glMatrixMode(GL_MODELVIEW);
+        if (new_width/new_height < 1) {
+            double aperture = atan(RADIUS/(DIST*new_width))*360.0/PI;
+            gluPerspective(aperture, new_width/new_height, zNear, zFar);
+        }
+        else {
+            double aperture = asin(RADIUS/DIST)*360.0/PI;
+            gluPerspective(aperture, new_width/new_height, zNear, zFar);
+        }
     }
+    glMatrixMode(GL_MODELVIEW);
     HEIGHT = new_height;
     WIDTH = new_width;
 }
@@ -92,7 +95,7 @@ string getStrCameraMode() {
 void initCamera(double rad) {
     glMatrixMode(GL_MODELVIEW);
 	  CAM_MODE = 1;
-    DIST = 0.0;
+    DIST = 0.1;
     CAM_ANGLE_Y = 0.0;
     CAM_ANGLE_Z = 0.0;
     CAM_ANGLE_X = 2.0;
@@ -110,7 +113,7 @@ void initCamera(double x_cam, double y_cam, double z_cam,
                 double rad) {
     glMatrixMode(GL_MODELVIEW);
     CAM_MODE = 1;
-    DIST = 0.0;
+    DIST = 0.1;
     CAM_ANGLE_Y = y_cam;
     CAM_ANGLE_Z = z_cam;
     CAM_ANGLE_X = x_cam;
@@ -161,11 +164,34 @@ void moveVRP(double x_move, double y_move, double z_move) {
 /**
   * Set the dist between camera and VRP
   * @param d Distance to be setted
+  * @param near Distance to start painting objects
+  * @param far Distance to stop painting objects
   */
 void setCamDist(double d, double near, double far) {
     DIST = d;
     zNear = near;
     zFar = far;
+}
+
+/**
+  * Set the dist between camera and VRP
+  * @param d Value to be applied
+  */
+void incrementCamDist(double d) {
+    DIST += d;
+}
+
+double getCamDist() {
+  return DIST;
+}
+
+double getCamAperture() {
+  if (WIDTH/HEIGHT < 1) {
+      return asin(HEIGHT/(DIST))*360.0/PI;
+  }
+  else {
+      return asin(RADIUS/DIST)*360.0/PI;
+  }
 }
 
 #endif
