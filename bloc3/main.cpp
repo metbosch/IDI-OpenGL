@@ -70,7 +70,7 @@ void status() {
     cout << endl;
     cout << "--------------------> >> STATUS << <-------------------" << endl;
     cout << " Camera mode : " << getStrCameraMode() << endl;    
-    cout << " Rotation factor: " << ROTATION_FACTOR << " [Def. 10]"<< endl;
+    cout << " Rotation factor: " << ROTATION_FACTOR << " [Def. 15]"<< endl;
     cout << "-------------------------------------------------------" << endl;
 }
 
@@ -99,16 +99,13 @@ void paintAxes() {
 }
 
 void paintFloor() {
-    glPushMatrix();
-        glTranslated(0.0, -0.4, 0.0);
-        glBegin(GL_QUADS);
-            glColor3f (0.545, 0.271, 0.075);
-            glVertex3f( 0.75, 0, 0.75);
-            glVertex3f( 0.75, 0,-0.75);
-            glVertex3f(-0.75, 0,-0.75);
-            glVertex3f(-0.75, 0, 0.75);
-        glEnd();
-    glPopMatrix();
+    glBegin(GL_QUADS);
+        glColor3f (0.545, 0.271, 0.075);
+        glVertex3f( 0.75, -0.4, 0.75);
+        glVertex3f( 0.75, -0.4,-0.75);
+        glVertex3f(-0.75, -0.4,-0.75);
+        glVertex3f(-0.75, -0.4, 0.75);
+    glEnd();
 }
 
 void paintSnowMan() {
@@ -140,6 +137,8 @@ void refresh () {
         paintFloor();
         paintSnowMan();
         paintModel();
+        glColor4f(0.0, 0.0, 0.5, 0.1);
+        glutWireSphere(SPHERE_RAD, 20, 20);
     glPopMatrix();
     glutSwapBuffers();
 }
@@ -219,7 +218,43 @@ Point calcVRP(Point min, Point max) {
     return ret;
 }
 
-double calcMinSphereRadius(Point min, Point max) {
+double calcMinContainerBoxScene(Point &min, Point &max) {
+    int num_els = 3;
+    Point maxs[num_els - 1];
+    Point mins[num_els - 1];
+    // Get min and max points for all the elements on the scene
+    getScaledPoints(min, max);
+    mins[0].x = -0.75;
+    mins[0].y = -0.4;
+    mins[0].z = -0.75;
+    maxs[0].x = 0.75;
+    maxs[0].y = -0.4;
+    maxs[0].z = 0.75;
+
+    mins[1].x = -0.4;
+    mins[1].y = -0.4;
+    mins[1].z = -0.4;
+    maxs[1].x = 0.4;
+    maxs[1].y = 0.8;
+    maxs[1].z = 0.4;
+    for (int i = 0; i < num_els - 1; ++i) {
+    cout << min.x << " " << min.y << " " << min.z << endl;
+    cout << max.x << " " << max.y << " " << max.z << endl;
+        cout << i << endl;
+        if (mins[i].x < min.x) min.x = mins[i].x;
+        if (maxs[i].x > max.x) max.x = maxs[i].x;
+        if (mins[i].y < min.y) min.y = mins[i].y;
+        if (maxs[i].y > max.y) max.y = maxs[i].y;
+        if (mins[i].z < min.z) min.z = mins[i].z;
+        if (maxs[i].z > max.z) max.z = maxs[i].z;
+    }
+}
+
+double calcMinSphereRadius() {
+    Point max, min;
+    calcMinContainerBoxScene(min, max);
+    cout << min.x << " " << min.y << " " << min.z << endl;
+    cout << max.x << " " << max.y << " " << max.z << endl;
     return sqrt((max.x - min.x)*(max.x - min.x) + (max.y - min.y)*(max.y - min.y) + (max.z - min.z)*(max.z - min.z))*0.5;
 }
 
@@ -228,7 +263,7 @@ double calcMinSphereRadius(Point min, Point max) {
   */
 void initGlobalVars() {
     SCALE = 1.0;
-    ROTATION_FACTOR = 10.0;
+    ROTATION_FACTOR = 15.0;
     MODE = 'r';
 }
 
@@ -272,11 +307,10 @@ int main(int argc, const char *argv[]) {
     Point p1 = {0.75, -0.4 + 0.25, 0.75};
     loadModel(argv[1], 0.5, p1);
     Point p2;
-    getScaledPoints(p1, p2);
-    SPHERE_RAD = 2.0;
+    SPHERE_RAD = calcMinSphereRadius();
     cout << SPHERE_RAD << endl;
     initCamera(SPHERE_RAD);
-    setCamDist(5, 4, 8);
+    setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
     setCameraMatrix();
 
     // GLUT events loop
