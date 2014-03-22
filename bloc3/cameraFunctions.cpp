@@ -5,37 +5,32 @@
     #include <OpenGL/OpenGL.h>
     #include <GLUT/GLUT.h>
 #else
-    #include<GL/gl.h>
-    #include<GL/freeglut.h>
+    #include <GL/gl.h>
+    #include <GL/freeglut.h>
+    #include <GL/glu.h>
 #endif
+#include <cmath>
 
 /** TYPE DEFINITIONS **/
 #ifndef __POINT_DEF__
 #define __POINT_DEF__
 
-struct Point {
+struct r {
     double x, y, z;
 };
 
 #endif
 
 /** CONSTATS VALUES **/
-const string CAM_MODES[] = {"PERSPECTIVE", "AXONOMETRIC"};
+#define PI atan(1)*4
 
 /** CAMERA VARIABLES **/
 double CAM_ANGLE_X, CAM_ANGLE_Y, CAM_ANGLE_Z;
-double DIST;
+double DIST, RADIUS, HEIGHT, WIDTH;
+double zNear = 0.001;
+double zFar = 10;
 Point VRP;
 unsigned char CAM_MODE;
-
-/**
-  * Set Glut Matrix Mode according to current value
-  */
-void setMatrixMode() {
-
-
-	glMatrixMode(CAM_MODES[CAM_MODE]);
-}
 
 /**
   * Set in the stack top a new Matrix according to current values
@@ -49,56 +44,80 @@ void setCameraMatrix() {
     glTranslated(-VRP.x, -VRP.y, -VRP.z);
 }
 
-
+void updateCamera(double new_height, double new_width) {
+  if (CAM_MODE) {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        if (new_width/new_height <= 1) {
+            double tmp = ( RADIUS * new_height / new_width); 
+            glOrtho(-RADIUS, RADIUS, -tmp, tmp, zNear, zFar);
+        }
+        else {
+            double tmp = ( RADIUS * new_width / new_height); 
+            glOrtho(-tmp, tmp, -RADIUS, RADIUS, zNear, zFar);
+        }
+        glMatrixMode(GL_MODELVIEW);
+    }
+    else {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        double aperture = asin(RADIUS/DIST);
+        aperture *= 360.0/PI;
+        gluPerspective(aperture, new_width/new_height, zNear, zFar);
+        glMatrixMode(GL_MODELVIEW);
+    }
+    HEIGHT = new_height;
+    WIDTH = new_width;
+}
 
 
 /**
-  * Change Glut Matrix Mode. Possible values are: GL_MODELVIEW and GL_PROJECTION
+  * Change the camera type between Orthogonal and Prespective
   */
-void changeCameraMode() {
-    ++CAM_MODE;
-    CAM_MODE %= (sizeof(CAM_MODES)/sizeof(*CAM_MODES));
+void changeCameraType() {
+    CAM_MODE = ++CAM_MODE%2;
+    updateCamera(HEIGHT, WIDTH);
 }
 
 /**
   * Get string identifier of current Glut Matrix Mode value
   */
 string getStrCameraMode() {
-	return (CAM_MODE ? "GL_PROJECTION" : "GL_MODELVIEW");
-}
-
-/**
-  * Get integer identifier of current Glut Matrix Mode value
-  */
-int getCameraMode() {
-	return CAM_MODE;
+	return (CAM_MODE ? "AXONOMETRIC" : "PRESPECTIVE");
 }
 
 /**
   * Initializate the camera variables to default values
   */
-void initCamera() {
-	CAM_MODE = 0;
+void initCamera(double rad) {
+    glMatrixMode(GL_MODELVIEW);
+	  CAM_MODE = 1;
+    DIST = 0.0;
     CAM_ANGLE_Y = 0.0;
     CAM_ANGLE_Z = 0.0;
     CAM_ANGLE_X = 2.0;
     VRP.x = 0.0;
     VRP.y = 0.0;
     VRP.z = 0.0;
+    RADIUS = rad;
 }
 
 /**
   * Initializate the camera variables to specified values
   */
 void initCamera(double x_cam, double y_cam, double z_cam,
-                double x_vrp, double y_vrp, double z_vrp) {
-    CAM_MODE = 0;
+                double x_vrp, double y_vrp, double z_vrp,
+                double rad) {
+    glMatrixMode(GL_MODELVIEW);
+    CAM_MODE = 1;
+    DIST = 0.0;
     CAM_ANGLE_Y = y_cam;
     CAM_ANGLE_Z = z_cam;
     CAM_ANGLE_X = x_cam;
     VRP.x = x_vrp;
     VRP.y = y_vrp;
     VRP.z = z_vrp;
+    RADIUS = rad;
 }
 
 /**
@@ -143,8 +162,10 @@ void moveVRP(double x_move, double y_move, double z_move) {
   * Set the dist between camera and VRP
   * @param d Distance to be setted
   */
-void setDist(double d) {
+void setCamDist(double d, double near, double far) {
     DIST = d;
+    zNear = near;
+    zFar = far;
 }
 
 #endif

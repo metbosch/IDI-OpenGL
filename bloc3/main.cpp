@@ -150,13 +150,10 @@ void refresh () {
  * @param width New width of window
  */
 void onResize(int height, int width) {
-//    double relX = (double)width/(double)(START_WIDTH);
-//    double relY = (double)height/(double)(START_HEIGHT);
-//    glMatrixMode(GL_PROJECTION);
-//    glLoadIdentity();
-//    glOrtho(-relY, relY, -relX, relX, -1, 1);
-//    gluPerspective();
-//    glViewport(0, 0, height, width);
+    double relX = (double)width/(double)(START_WIDTH);
+    double relY = (double)height/(double)(START_HEIGHT);
+    updateCamera(SPHERE_RAD*relX, SPHERE_RAD*relY);
+    glViewport(0, 0, height, width);
 }
 
 void onMouseClick(int buton, int evnt, int x, int y) {
@@ -196,10 +193,10 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
                     break;
         case 's':   status();
                     break;
-        case 'p':   changeCameraMode();
+        case 'p':   changeCameraType();
                     glutPostRedisplay();
                     break;
-        case 'i':   initCamera();
+        case 'i':   initCamera(SPHERE_RAD);
                     setCameraMatrix();
                     glutPostRedisplay();
                     break;
@@ -259,12 +256,6 @@ int main(int argc, const char *argv[]) {
     glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA);
     glutInitWindowSize(START_HEIGHT, START_WIDTH);
     glutCreateWindow("IDI: Bloc 3");
-    
-    // Config rotations mode
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1, 1, -1, 1, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
 
     // Registre de Callbacks
     glutDisplayFunc(refresh);
@@ -277,14 +268,15 @@ int main(int argc, const char *argv[]) {
     initGL();
 
     // Initialization of global variables
-    initCamera();
     initGlobalVars();
     Point p1 = {0.75, -0.4 + 0.25, 0.75};
     loadModel(argv[1], 0.5, p1);
     Point p2;
     getScaledPoints(p1, p2);
-    SPHERE_RAD = calcMinSphereRadius(p1, p2);
+    SPHERE_RAD = 2.0;
     cout << SPHERE_RAD << endl;
+    initCamera(SPHERE_RAD);
+    setCamDist(5, 4, 8);
     setCameraMatrix();
 
     // GLUT events loop
