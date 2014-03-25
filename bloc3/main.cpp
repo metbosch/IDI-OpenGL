@@ -59,7 +59,7 @@ void help() {
     cout << "  -> Press 'm' to redouce dist" << endl;
     cout << "  -> Press 'n' to increase dist" << endl;
     cout << " Print status information" << endl;
-    cout << "  -> Press 's' to display" << endl;
+    cout << "  -> Press 'y' to display" << endl;
     cout << " Set the response of mouse events on window" << endl;
     cout << "  -> Press 'r' to set camera rotation mode" << endl;
     cout << " Set the precision of rotation mode" << endl;
@@ -152,15 +152,26 @@ void paintSnowMan(Point center) {
 
 /* --------------------- PATRICIO CAM ---------------------- */
 
-double alfa = 0.0, beta = 0.0;
+double alfa = 0.0, beta = 0.0, velocity = 0.1;
 
-void setPatricioCam() {
-   /* Point patricio = models[0].getPosition();
-    Point vrp =
+void updatePatricioCam() {
+    Point patricio = models[0].getPosition();
+    Point vrp;
+    vrp.x = patricio.x + sin(models[0].getAngleY());
+    vrp.y = patricio.y;
+    vrp.z = patricio.z + cos(models[0].getAngleY());
     glLoadIdentity();
     gluLookAt(patricio.x, patricio.y + 0.25, patricio.z,
               vrp.x, vrp.y, vrp.z,
-              0, 1, 0);*/
+              0, 1, 0);
+}
+
+void increaseVelocity() {
+    velocity *= 1.1;
+}
+
+void decreaseVelocity() {
+    velocity *= 0.9;
 }
 
 /* ----------------- END OF PATRICIO CAM ------------------- */
@@ -229,24 +240,39 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
         switch (key) {
             case 'h':   help();
                         break;
-            case 's':   status();
+            case 'y':   status();
                         break;
             case 'a':   models[0].increaseAngles(0, 3, 0);
-            glutPostRedisplay();
+                        updatePatricioCam();
+                        glutPostRedisplay();
                         break;
             case 'd':   models[0].increaseAngles(0,-3, 0);
-            glutPostRedisplay();
+                        updatePatricioCam();
+                        glutPostRedisplay();
+                        break;
+            case 'z':   increaseVelocity();
+                        break;
+            case 'x':   decreaseVelocity();
                         break;
             case 'c':   updateCamera(height, width);
                         setCameraMatrix();
                         glutPostRedisplay();
-                        MODE = 'o';
+                        MODE = 'r';
+                        break;
+            case 'w':   models[0].walk(velocity);
+                        updatePatricioCam();
+                        glutPostRedisplay();
+                        break;
+            case 's':   models[0].walk(-velocity);
+                        updatePatricioCam();
+                        glutPostRedisplay();
                         break;
             case (char)27:  close();
                             break;
         }
     }
     else {
+        MODE = key;
         switch (key) {
             case 'h':   help();
                         break;
@@ -254,7 +280,7 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
                         break;
             case '-':   ROTATION_FACTOR /= 1.3;
                         break;
-            case 's':   status();
+            case 'y':   status();
                         break;
             case 'p':   changeCameraType();
                         glutPostRedisplay();
@@ -281,7 +307,7 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
                         updateCamera(height, width);
                         glutPostRedisplay();
                         break;
-            case 'c':   setPatricioCam();
+            case 'c':   updatePatricioCam();
                         MODE = 'c';
                         break;
             case (char)27:  close();

@@ -22,6 +22,7 @@ struct Point {
 
 #endif
 
+
 /** AUXILIAR FUNCTIONS **/
 #ifndef __AUX_FUNCT__
 #define __AUX_FUNCT__
@@ -39,6 +40,9 @@ double max (double a, double b, double c) {
     else if (max(a, b) < max(b, c)) return c;
     else return b;
 }
+
+#define PI (3.14159)
+#define TO_RADIANTS (PI/180.0)
 
 #endif
 
@@ -190,15 +194,20 @@ public:
     }
 
     /**
-     * Move the model center
-     * @param x Value to add to the x
-     * @param y Value to add to the y
-     * @param z Value to add to the z
+     * Get the Y axes rotation angle of the model
+     * @return Angle in radiants of Y axes
      */
-    void move(double x, double y, double z) {
-        TRANS_X += x;
-        TRANS_Y += y;
-        TRANS_Z += z;
+    double getAngleY() {
+        return ANGLE_Y*TO_RADIANTS;
+    }
+
+    /**
+     * Make the model walk
+     * @param units Number of units to advance
+     */
+    void walk(double units) {
+        TRANS_X += sin(ANGLE_Y*TO_RADIANTS)*units;
+        TRANS_Z += cos(ANGLE_Y*TO_RADIANTS)*units;
     }
 };
 
