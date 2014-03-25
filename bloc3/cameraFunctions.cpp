@@ -26,7 +26,7 @@ struct r {
 
 /** CAMERA VARIABLES **/
 double CAM_ANGLE_X, CAM_ANGLE_Y, CAM_ANGLE_Z;
-double DIST, RADIUS, HEIGHT, WIDTH, ZOOM;
+double DIST, RADIUS, HEIGHT, WIDTH, ZOOM, alfa_ini;
 double zNear = 0.001;
 double zFar = 10;
 Point VRP;
@@ -59,11 +59,11 @@ void updateCamera(double new_height, double new_width) {
     }
     else {
         if (new_width/new_height < 1) {
-            double aperture = atan(RADIUS/(DIST*new_width))*360.0/PI;
+            double aperture = atan(tan(alfa_ini)*new_height/new_width)*360.0/PI;
             gluPerspective(aperture*ZOOM, new_width/new_height, zNear, zFar);
         }
         else {
-            double aperture = asin(RADIUS/DIST)*360.0/PI;
+            double aperture = alfa_ini*360.0/PI;
             gluPerspective(aperture*ZOOM, new_width/new_height, zNear, zFar);
         }
     }
@@ -168,6 +168,7 @@ void setCamDist(double d, double near, double far) {
     DIST = d;
     zNear = near;
     zFar = far;
+    alfa_ini = asin(RADIUS/DIST);
 }
 
 /**

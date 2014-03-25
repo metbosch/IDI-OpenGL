@@ -2,7 +2,7 @@
 using namespace std;
 
 #include <math.h>
-#include <Vector>
+#include <vector>
 #include "modelFunctions.cpp"
 #include "cameraFunctions.cpp"
 #if defined(__APPLE__)
@@ -124,7 +124,7 @@ void paintFloor() {
 void paintWalls() {
     glPushMatrix();
         glColor3f(0.0, 1.0, 0.0);
-        glTranslated(2.5, 0.75, -2.5);
+        glTranslated(2.5, 0.75, -1.5);
         glScaled(20, 7.5, 1);
         glutSolidCube(0.2);
     glPopMatrix();
@@ -149,6 +149,21 @@ void paintSnowMan(Point center) {
         glutSolidCone(0.1, 0.2, 20, 20);
     glPopMatrix();
 }
+
+/* --------------------- PATRICIO CAM ---------------------- */
+
+double alfa = 0.0, beta = 0.0;
+
+void setPatricioCam() {
+   /* Point patricio = models[0].getPosition();
+    Point vrp =
+    glLoadIdentity();
+    gluLookAt(patricio.x, patricio.y + 0.25, patricio.z,
+              vrp.x, vrp.y, vrp.z,
+              0, 1, 0);*/
+}
+
+/* ----------------- END OF PATRICIO CAM ------------------- */
 
 /* ----------------------- CALLBACKS ----------------------- */
 
@@ -209,45 +224,70 @@ void onMouseMotion(int x, int y) {
 void onKeyboardPulse(unsigned char key, int x, int y) {
     float height = glutGet(GLUT_WINDOW_HEIGHT)/(double)(START_HEIGHT);
     float width  = glutGet(GLUT_WINDOW_WIDTH)/(double)(START_WIDTH);
-    switch (key) {
-        case 'h':   help();
-                    break;
-        case '+':   ROTATION_FACTOR *= 1.3;
-                    break;
-        case '-':   ROTATION_FACTOR /= 1.3;
-                    break;
-        case 's':   status();
-                    break;
-        case 'p':   changeCameraType();
-                    glutPostRedisplay();
-                    break;
-        case 'i':   initCamera(SPHERE_RAD);
-                    setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
-                    updateCamera(height, width);
-                    setCameraMatrix();
-                    glutPostRedisplay();
-                    break;
-        case 'm':   incrementCamDist(SPHERE_RAD/15);
-                    updateCamera(height, width);
-                    glutPostRedisplay();
-                    break;
-        case 'n':   incrementCamDist(-SPHERE_RAD/15);
-                    updateCamera(height, width);
-                    glutPostRedisplay();
-                    break;
-        case 'o':   zoomOut();
-                    updateCamera(height, width);
-                    glutPostRedisplay();
-                    break;
-        case 'l':   zoomIn();
-                    updateCamera(height, width);
-                    glutPostRedisplay();
-                    break;
-        case (char)27:  close();
+
+    if (MODE == 'c') {
+        switch (key) {
+            case 'h':   help();
                         break;
+            case 's':   status();
+                        break;
+            case 'a':   models[0].increaseAngles(0, 3, 0);
+            glutPostRedisplay();
+                        break;
+            case 'd':   models[0].increaseAngles(0,-3, 0);
+            glutPostRedisplay();
+                        break;
+            case 'c':   updateCamera(height, width);
+                        setCameraMatrix();
+                        glutPostRedisplay();
+                        MODE = 'o';
+                        break;
+            case (char)27:  close();
+                            break;
+        }
     }
-    if (MODE == 'c' && key == 'c') MODE == 'r';
-    else MODE = key;
+    else {
+        switch (key) {
+            case 'h':   help();
+                        break;
+            case '+':   ROTATION_FACTOR *= 1.3;
+                        break;
+            case '-':   ROTATION_FACTOR /= 1.3;
+                        break;
+            case 's':   status();
+                        break;
+            case 'p':   changeCameraType();
+                        glutPostRedisplay();
+                        break;
+            case 'i':   initCamera(SPHERE_RAD);
+                        setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
+                        updateCamera(height, width);
+                        setCameraMatrix();
+                        glutPostRedisplay();
+                        break;
+            case 'm':   incrementCamDist(SPHERE_RAD/15);
+                        updateCamera(height, width);
+                        glutPostRedisplay();
+                        break;
+            case 'n':   incrementCamDist(-SPHERE_RAD/15);
+                        updateCamera(height, width);
+                        glutPostRedisplay();
+                        break;
+            case 'o':   zoomOut();
+                        updateCamera(height, width);
+                        glutPostRedisplay();
+                        break;
+            case 'l':   zoomIn();
+                        updateCamera(height, width);
+                        glutPostRedisplay();
+                        break;
+            case 'c':   setPatricioCam();
+                        MODE = 'c';
+                        break;
+            case (char)27:  close();
+                            break;
+        }
+    }
 }
 
 /* -------------------- END OF CALLBACKS -------------------- */

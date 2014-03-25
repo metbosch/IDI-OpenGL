@@ -1,7 +1,7 @@
 all: main exec
 
 main: main.cpp model.o
-	g++ main.cpp model.o -o program -lglut -lGL -lglu
+	g++ main.cpp model.o -o program -lglut -lGL -lGLU
 
 exec: program
 ifdef MODEL

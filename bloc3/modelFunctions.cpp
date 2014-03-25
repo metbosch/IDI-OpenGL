@@ -167,6 +167,39 @@ public:
         ANGLE_Y = an_y;
         ANGLE_X = an_x;
     }
+
+    /**
+      * Increment the model rotation angles arround its center
+      * @parma an_x Angle for X axes
+      * @parma an_y Angle for Y axes
+      * @parma an_z Angle for Z axes
+      */
+    void increaseAngles(double an_x, double an_y, double an_z) {
+        ANGLE_Z += an_z;
+        ANGLE_Y += an_y;
+        ANGLE_X += an_x;
+    }
+
+    /**
+     * Get the center point of the model
+     * @return Point where the center of the model was
+     */
+    Point getPosition() {
+        Point p = {TRANS_X, TRANS_Y, TRANS_Z};
+        return p;
+    }
+
+    /**
+     * Move the model center
+     * @param x Value to add to the x
+     * @param y Value to add to the y
+     * @param z Value to add to the z
+     */
+    void move(double x, double y, double z) {
+        TRANS_X += x;
+        TRANS_Y += y;
+        TRANS_Z += z;
+    }
 };
 
 #endif
