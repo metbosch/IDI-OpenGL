@@ -55,6 +55,8 @@ void help() {
     cout << "---------------> >> HELP INFORMATION << <--------------" << endl;
     cout << " Change camera mode [orto | presp]" << endl;
     cout << "  -> Press 'p' to change" << endl;
+	cout << " Change camera position [external | internal]" << endl;
+    cout << "  -> Press 'c' to change (available options will change)" << endl;
     cout << " Change the dist behind VRP and camera" << endl;
     cout << "  -> Press 'm' to redouce dist" << endl;
     cout << "  -> Press 'n' to increase dist" << endl;
@@ -70,6 +72,31 @@ void help() {
     cout << " Zoom in/out of camera optic" << endl;
     cout << "  -> Press 'o' to make zoom-out" << endl;
     cout << "  -> Press 'l' to make zoom-in" << endl;
+    cout << " Press ESC to exit" << endl;
+    cout << "-------------------------------------------------------" << endl;
+}
+
+/**
+  * Display help information on default output channel
+  */
+void help2() {
+    cout << endl;
+    cout << "---------------> >> HELP INFORMATION << <--------------" << endl;
+    cout << " Change camera position [external | internal]" << endl;
+    cout << "  -> Press 'c' to change (available options will change)" << endl;
+    cout << " Rotate the camera to right or left" << endl;
+    cout << "  -> Press 'd' to move right" << endl;
+    cout << "  -> Press 'a' to move left" << endl;
+    cout << " Print status information" << endl;
+    cout << "  -> Press 'y' to display" << endl;
+    cout << " Set the response of mouse events on window" << endl;
+    cout << "  -> Press 't' to set camera in mode 'tafaner'" << endl;
+    cout << " Set the velocity of camera moves" << endl;
+    cout << "  -> Press 'z' to increment velocity" << endl;
+    cout << "  -> Press 'x' to decrement velocity" << endl;
+    cout << " Move the camera arround the scene" << endl;
+    cout << "  -> Press 'w' to move front" << endl;
+    cout << "  -> Press 's' to move back" << endl;
     cout << " Press ESC to exit" << endl;
     cout << "-------------------------------------------------------" << endl;
 }
@@ -154,6 +181,20 @@ void paintSnowMan(Point center) {
 
 double alfa = 0.0, beta = 0.0, velocity = 0.1;
 
+void initPatricioCam(double height, double width) {
+	glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+//	if (width/height < 1) {
+//        double aperture = atan(tan(60*PI/360.0)*height/width)*360.0/PI;
+//        gluPerspective(aperture, width/height, 0.1, 2*SPHERE_RAD);
+//    }
+//    else {
+        gluPerspective(60, width/height, 0.1, 2*SPHERE_RAD);
+ //   }
+	glMatrixMode(GL_MODELVIEW);
+	
+}
+
 void updatePatricioCam() {
     Point patricio = models[0].getPosition();
     Point vrp;
@@ -191,7 +232,7 @@ void refresh () {
         models[0].draw();
         models[1].draw();
         glColor4f(0.0, 0.0, 0.5, 0.1);
-        glutWireSphere(SPHERE_RAD, 20, 20);
+       // glutWireSphere(SPHERE_RAD, 20, 20);
     glPopMatrix();
     glutSwapBuffers();
 }
@@ -204,7 +245,12 @@ void refresh () {
 void onResize(int height, int width) {
     double relX = (double)width/(double)(START_WIDTH);
     double relY = (double)height/(double)(START_HEIGHT);
-    updateCamera(relX, relY);
+	switch (MODE) {
+		case 'c':	initPatricioCam(relX, relY);
+					break;
+		default:	updateCamera(relX, relY);
+					break;
+	}    
     glViewport(0, 0, height, width);
 }
 
@@ -238,7 +284,7 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
 
     if (MODE == 'c') {
         switch (key) {
-            case 'h':   help();
+            case 'h':   help2();
                         break;
             case 'y':   status();
                         break;
@@ -307,7 +353,9 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
                         updateCamera(height, width);
                         glutPostRedisplay();
                         break;
-            case 'c':   updatePatricioCam();
+            case 'c':   initPatricioCam(height, width);
+				        updatePatricioCam();
+						glutPostRedisplay();
                         MODE = 'c';
                         break;
             case (char)27:  close();
