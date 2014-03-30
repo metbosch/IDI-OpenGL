@@ -15,7 +15,7 @@
 #ifndef __POINT_DEF__
 #define __POINT_DEF__
 
-struct r {
+struct Point {
     double x, y, z;
 };
 
@@ -92,7 +92,7 @@ string getStrCameraMode() {
   */
 void initCamera(double rad) {
     glMatrixMode(GL_MODELVIEW);
-	  CAM_MODE = 1;
+	CAM_MODE = 0;
     DIST = 0.1;
     CAM_ANGLE_Y = 0.0;
     CAM_ANGLE_Z = 0.0;
@@ -111,7 +111,7 @@ void initCamera(double rad) {
   */
 void initCamera(double x_cam, double y_cam, double z_cam, Point vrp, double rad) {
     glMatrixMode(GL_MODELVIEW);
-    CAM_MODE = 1;
+    CAM_MODE = 0;
     DIST = 0.1;
     CAM_ANGLE_Y = y_cam;
     CAM_ANGLE_Z = z_cam;
@@ -198,5 +198,74 @@ void zoomIn() {
 void zoomOut() {
   ZOOM *= 1.1;
 }
+
+/* --------------------- PERSONAL CAM ---------------------- */
+
+/** VARIABLES **/
+double alfa, beta, velocity;
+
+void initPersonalCamVars() {
+  alfa = 0.0;
+  beta = 0.0;
+  velocity = 0.1;
+}
+
+void initPersonalCam(double height, double width) {
+  glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60, width/height, 0.1, 2*RADIUS);
+  glMatrixMode(GL_MODELVIEW);
+  
+}
+
+void updatePersonalCam(Point pos, double angle) {
+    Point vrp;
+    vrp.x = pos.x + sin(angle + alfa*TO_RADIANTS);
+    vrp.y = 2.0*pos.y + sin(beta*TO_RADIANTS);
+    vrp.z = pos.z + cos(angle + alfa*TO_RADIANTS);
+    glLoadIdentity();
+    gluLookAt(pos.x, 2.0*pos.y, pos.z,
+              vrp.x, vrp.y, vrp.z,
+              0, 1, 0);
+}
+
+void resetAlfaBeta() {
+  alfa = 0.0;
+  beta = 0.0;
+}
+
+void increaseVelocity() {
+    velocity *= 1.1;
+}
+
+void decreaseVelocity() {
+    velocity *= 0.9;
+}
+
+void increaseAlfa() {
+    alfa += 3;
+}
+
+void decreaseAlfa() {
+    alfa -= 3;
+}
+
+void increaseBeta() {
+    beta += beta > 90 ? 0 : 3;
+}
+
+void decreaseBeta() {
+    beta -= beta < -90 ? 0 : 3;
+}
+
+double getAlfa() {
+  return alfa;
+}
+
+double getBeta() {
+  return beta;
+}
+
+/* ----------------- END OF PERSONAL CAM ------------------- */
 
 #endif
