@@ -220,7 +220,7 @@ void refresh () {
         models[0].draw();
         models[1].draw();
         glColor4f(0.0, 0.0, 0.5, 0.1);
-        glutWireSphere(SPHERE_RAD, 60, 60);
+      //glutWireSphere(SPHERE_RAD, 60, 60);
     glPopMatrix();
     glutSwapBuffers();
 }

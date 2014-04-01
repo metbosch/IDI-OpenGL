@@ -7,7 +7,7 @@ exec: program
 ifdef MODEL
 	./program ${MODEL} &
 else
-	./program legoman.obj &
+	./program Patricio.obj &
 endif		
 
 model.o: model.cpp
