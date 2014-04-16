@@ -25,7 +25,7 @@ struct Point {
 #endif
 
 /** PROGRAM CONSTATNS **/
-#define DIVS_FLOOR 4
+#define DIVS_FLOOR 5.0
 #define model0_height 1
 #define model1_height 1.5
 const Point model0_place = {0, 0.5, 0};
@@ -41,6 +41,8 @@ unsigned char MODE;
 int LAST_MOUSE_X, LAST_MOUSE_Y;
 vector <ModelLoader> models;
 bool draw_walls, enable_light, norm_vert;
+bool enable_light0, enable_light1, enable_light2;
+Point pos_light0;
 
 
 /**
@@ -51,33 +53,48 @@ void close() {
 }
 
 /**
-  * Display help information on default output channel
+  * Display common help information on default output channel
   */
 void help() {
     cout << endl;
     cout << "---------------> >> HELP INFORMATION << <--------------" << endl;
-    cout << " Change camera mode [orto | presp]" << endl;
-    cout << "  -> Press 'p' to change" << endl;
 	cout << " Change camera position [external | internal]" << endl;
     cout << "  -> Press 'c' to change (available options will change)" << endl;
-    cout << " Change the dist behind VRP and camera" << endl;
-    cout << "  -> Press 'm' to redouce dist" << endl;
-    cout << "  -> Press 'k' to increase dist" << endl;
-	cout << " Enable/Disable walls draw" << endl;
-    cout << "  -> Press 'v' to invert current option" << endl;
-    cout << " Enable/Disable lighting" << endl;
-    cout << "  -> Press 'i' to invert current option" << endl;
+	cout << " Show or hide walls" << endl;
+    cout << "  -> Press 'v' to change" << endl;
+    cout << " Light options" << endl;
+    cout << "  -> Press 'i' to enable/disable lighting" << endl;
+    cout << "  -> Press 'm' to change light0 position" << endl;
+    cout << "  -> Press '0' to switch on/off light0 [sceen light]" << endl;
+    cout << "  -> Press '1' to switch on/off [camera light]" << endl;
+    cout << "  -> Press '2' to switch on/off light2 [patricio light]" << endl;
     cout << " Enable/Disable noramal per vertex" << endl;
-    cout << "  -> Press 'n' to invert current option" << endl;
-    cout << " Print status information" << endl;
-    cout << "  -> Press 'y' to display" << endl;
+    cout << "  -> Press 'n' to change" << endl;
+    cout << " Reset the program to starting position" << endl;
+    cout << "  -> Press 'r' to reset" << endl;
+    cout << " Patricio movements" << endl;
+    cout << "  -> Press 'w' to move front" << endl;
+    cout << "  -> Press 's' to move back" << endl;
+    cout << "  -> Press 'd' to rotate rigth" << endl;
+    cout << "  -> Press 'a' to rotate rigth" << endl;
+    cout << "  -> Press 'x' to increase movements velocity" << endl;
+    cout << "  -> Press 'z' to decrease movements velocity" << endl;
+}
+
+/**
+  * Display 3th person camera help information on default output channel
+  */
+void helpExternCam() {
+    cout << " Change camera mode [orto | presp]" << endl;
+    cout << "  -> Press 'p' to change" << endl;
+    cout << " Change the dist behind VRP and camera" << endl;
+    cout << "  -> Press 'j' to redouce dist" << endl;
+    cout << "  -> Press 'k' to increase dist" << endl;
     cout << " Set the response of mouse events on window" << endl;
     cout << "  -> Press 'e' to set change euler angles mode" << endl;
     cout << " Set the precision of rotation mode" << endl;
     cout << "  -> Press '+' to increment the rotation speed" << endl;
     cout << "  -> Press '-' to decrement the rotation speed" << endl;
-    cout << " Reset the program to starting camera position" << endl;
-    cout << "  -> Press 'r' to reset" << endl;
     cout << " Optical Camera zoom in/out" << endl;
     cout << "  -> Press 'o' to make zoom-out" << endl;
     cout << "  -> Press 'l' to make zoom-in" << endl;
@@ -86,68 +103,16 @@ void help() {
 }
 
 /**
-  * Display extra help information of Tafaner Mode
+  * Display 1st person camera help information on default output channel
   */
-void helpTafaner() {
-    cout << " Change camera angles relative to model ('Tafaner' mode)" << endl;
-    cout << "  -> Use arrows to move the camera" << endl;
-}
-
-/**
-  * Display help information on default output channel
-  */
-void help2() {
-    cout << endl;
-    cout << "---------------> >> HELP INFORMATION << <--------------" << endl;
-    cout << " Change camera position [external | internal]" << endl;
-    cout << "  -> Press 'c' to change (available options will change)" << endl;
-    cout << " Rotates right or left model" << endl;
-    cout << "  -> Press 'd' to rotate right" << endl;
-    cout << "  -> Press 'a' to rotate left" << endl;
-    cout << " Print status information" << endl;
-    cout << "  -> Press 'y' to display" << endl;
-	cout << " Enable/Disable walls draw" << endl;
-    cout << "  -> Press 'v' to invert current option" << endl;    
-    cout << " Enable/Disable lighting" << endl;
-    cout << "  -> Press 'i' to invert current option" << endl;
-    cout << " Enable/Disable noramal per vertex" << endl;
-    cout << "  -> Press 'n' to invert current option" << endl;
+void helpPatriCam() {
     cout << " Set mode of internal camera [default | 'tafaner']" << endl;
-    cout << "  -> Press 't' to change" << endl;
-	if (MODE == 't') helpTafaner();
-    cout << " Set velocity of camera moves" << endl;
-    cout << "  -> Press 'z' to increment velocity" << endl;
-    cout << "  -> Press 'x' to decrement velocity" << endl;
-    cout << " Move camera arround the scene" << endl;
-    cout << "  -> Press 'w' to move front" << endl;
-    cout << "  -> Press 's' to move back" << endl;
+    cout << "  -> Press 't' to change (available options will change)" << endl;
+	if (MODE == 't') {
+        cout << " Change camera angles relative to model ('Tafaner' mode)" << endl;
+        cout << "  -> Use arrows to move the camera" << endl;
+    }
     cout << " Press ESC to exit" << endl;
-    cout << "-------------------------------------------------------" << endl;
-}
-
-/**
-  * Display program status information on default output channel
-  */
-void status() {
-    cout << endl;
-    cout << "--------------------> >> STATUS << <-------------------" << endl;
-    cout << " Camera mode    : " << getStrCameraMode() << endl;   
-    cout << " Camera dist    : " << getCamDist() << endl;
-    cout << " Camera aperture: " << getCamAperture() << endl;
-    cout << " Rotation factor: " << ROTATION_FACTOR << " [Def. 15]"<< endl;
-    cout << "-------------------------------------------------------" << endl;
-}
-
-/**
-  * Display program status information on default output channel
-  */
-void status2() {
-    cout << endl;
-    cout << "--------------------> >> STATUS << <-------------------" << endl;
-    cout << " Camera mode    : " << ((MODE == 'c') ? "Internal" : "Internal 'Tafaner'") << endl;   
-    cout << " 'Tafaner' alfa : " << getAlfa() << endl;
-	cout << " 'Tafaner' beta : " << getBeta() << endl;
-    cout << " Camera aperture: " << "60º" << endl;
     cout << "-------------------------------------------------------" << endl;
 }
 
@@ -177,19 +142,22 @@ void paintAxes() {
     glEnd();
 }
 
+/**
+  * Draw the specified sceen floor composed by DIVS_FLOOR^2 subsections
+  */
 void paintFloor() {
-    glColor3f (1, 0.3, 0);
-    float vec1[] = {1, 0.3, 0, 0.1};
+    glColor3f (0.0, 0.0, 1.0);
+    float vec1[] = {0.0, 0.0, 0.3, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, vec1);
-    float vec2[] = {1, 0.3, 0, 0.6};
+    float vec2[] = {0.0, 0.0, 0.6, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, vec2);
-    float vec3[] = {1, 0.3, 0, 0.9};
+    float vec3[] = {0.7, 0.7, 0.7, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec3);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0);
-    glNormal3f(0, 1, 0);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 4.0);
     float factor = 10.0/(float)DIVS_FLOOR;
-    for (float x = -factor; x <= 5; x += factor) {
-        for (float z = -factor; z <= 5; z += factor) {
+    for (float x = -5.0 + factor; x <= 5; x += factor) {
+        for (float z = -5.0 + factor; z <= 5; z += factor) {            
+            glNormal3f(0, 1, 0);
             glBegin(GL_QUADS);
                 glVertex3f( x, 0, z);
                 glVertex3f( x-factor, 0, z);
@@ -200,13 +168,16 @@ void paintFloor() {
     }
 }
 
+/**
+  * Draw the specified sceen walls
+  */
 void paintWalls() {
-    glColor3f(0.0, 1.0, 0.0);
-    float vec1[] = {0.0, 1.0, 0.0, 0.1};
+    glColor3f(0.0, 0.7, 0.0);
+    float vec1[] = {0.0, 0.15, 0.0, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, vec1);
-    float vec2[] = {0.0, 1.0, 0.0, 0.6};
+    float vec2[] = {0.0, 0.5, 0.0, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, vec2);
-    float vec3[] = {0.0, 1.0, 0.0, 0.9};
+    float vec3[] = {0.0, 0.0, 0.0, 0.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec3);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0);
     glPushMatrix();
@@ -221,33 +192,109 @@ void paintWalls() {
     glPopMatrix();
 }
 
+/**
+  * Draw a snowman placed in specified point
+  * @param center Bottom central point of minimum snowman containing box
+  */
 void paintSnowMan(Point center) {
     glPushMatrix();
         glTranslated(center.x, center.y + 0.4, center.z);
         glColor3f(1.0, 1.0, 1.0);
-        float vec1[] = {0.9, 0.9, 0.9, 0.1};
+        float vec1[] = {0.3, 0.3, 0.3, 1.0};
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, vec1);
-        float vec2[] = {0.9, 0.9, 0.9, 0.6};
+        float vec2[] = {0.6, 0.6, 0.6, 1.0};
         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, vec2);
-        float vec3[] = {0.9, 0.9, 0.9, 0.9};
+        float vec3[] = {0.9, 0.9, 0.9, 1.0};
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec3);
         glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0);
         glutSolidSphere(0.4, 20, 20);
         glTranslated(0.0, 0.6, 0.0);
         glutSolidSphere(0.2, 20, 20);
         glColor3f(1.0, 0.5, 0.0);
-        float vec4[] = {1.0, 0.5, 0.0, 0.1};
+        float vec4[] = {0.3, 0.15, 0.0, 1.0};
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, vec4);
-        float vec5[] = {1.0, 0.5, 0.0, 0.6};
+        float vec5[] = {0.6, 0.3, 0.0, 1.0};
         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, vec5);
-        float vec6[] = {1.0, 0.5, 0.0, 0.9};
+        float vec6[] = {0.8, 0.4, 0.0, 1.0};
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec6);
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0);
         glTranslated(0.1, 0.0, 0.0);
         glRotated(90, 0, 1, 0);
         glutSolidCone(0.1, 0.2, 20, 20);
     glPopMatrix();
 }
+
+/* -------------------- LIGHT FUNCTIONS -------------------- */
+
+void initLight0(double x, double y, double z) {
+    pos_light0.x = x;
+    pos_light0.y = y;
+    pos_light0.z = z;
+
+    float vec1[] = {0.1, 0.1, 0.0, 1.0};
+    glLightfv(GL_LIGHT0, GL_AMBIENT, vec1);
+    float vec2[] = {0.4, 0.4, 0.0, 1.0};
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, vec2);
+    float vec3[] = {0.7, 0.7, 0.0, 1.0};
+    glLightfv(GL_LIGHT0, GL_SPECULAR, vec3);
+}
+
+void initLight1() {
+    float vec4[] = {0.2, 0.2, 0.2, 1.0};
+    glLightfv(GL_LIGHT1, GL_AMBIENT, vec4);
+    float vec5[] = {0.5, 0.5, 0.5, 1.0};
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, vec5);
+    float vec6[] = {0.8, 0.8, 0.8, 1.0};
+    glLightfv(GL_LIGHT1, GL_SPECULAR, vec6);
+}
+
+void initLight2() {
+    float vec4[] = {0.1, 0.1, 0.1, 1.0};
+    glLightfv(GL_LIGHT2, GL_AMBIENT, vec4);
+    float vec5[] = {0.4, 0.4, 0.4, 1.0};
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, vec5);
+    float vec6[] = {0.7, 0.7, 0.7, 1.0};
+    glLightfv(GL_LIGHT2, GL_SPECULAR, vec6);
+}
+
+void setLight0Pos() { 
+    float vec4[] = {pos_light0.x, pos_light0.y, pos_light0.z, 0};
+    glLightfv(GL_LIGHT0, GL_POSITION, vec4);
+}
+
+void setLight1Pos() { 
+    glPushMatrix();
+    glLoadIdentity();
+    float vec4[] = {0.05, 0.05, 0.05, 0};
+    glLightfv(GL_LIGHT1, GL_POSITION, vec4);
+    glPopMatrix();
+}
+
+void setLight2Pos() {
+    Point p = models[0].getPosition();
+    float vec4[] = {p.x, p.y, p.z, 0};
+    glLightfv(GL_LIGHT2, GL_POSITION, vec4);
+}
+
+void setLightsPos() {
+    setLight0Pos();
+    setLight2Pos();
+}
+
+void changeLight0Pos() {
+    if ((pos_light0.x >= 0) == (pos_light0.z >= 0)) pos_light0.x = -pos_light0.x;
+    else pos_light0.z = -pos_light0.z;
+    setLight0Pos();
+}
+
+void initLightVariables() {
+    enable_light = true;
+    enable_light0 = false;
+    enable_light1 = true;
+    enable_light2 = false;
+}
+
+/* ---------------- END OF LIGHT FUNCTIONS ----------------- */
 
 /* ----------------------- CALLBACKS ----------------------- */
 
@@ -259,14 +306,15 @@ void refresh () {
     glPushMatrix();
         //glRotated(0, 1, 0, 0);
         //glScaled(SCALE, SCALE, SCALE);
+        void (*f_pointer)() = setLight2Pos;
+        models[0].draw(norm_vert);
+        models[1].draw(norm_vert);
         paintFloor();
         if (draw_walls) paintWalls();
         paintSnowMan({ 2.5, 0, 2.5});
         paintSnowMan({-2.5, 0, 2.5});
         paintSnowMan({-2.5, 0,-2.5});
-        models[0].draw(norm_vert);
-        models[1].draw(norm_vert);
-        glColor4f(0.0, 0.0, 0.5, 0.1);
+      //glColor4f(0.0, 0.0, 0.5, 0.1);
       //glutWireSphere(SPHERE_RAD, 60, 60);
     glPopMatrix();
     glutSwapBuffers();
@@ -305,64 +353,96 @@ void onMouseMotion(int x, int y) {
         case 'e':   incrementEulerAngles(((double)(LAST_MOUSE_Y - y)*ROTATION_FACTOR/height),
                                          ((double)(x - LAST_MOUSE_X)*ROTATION_FACTOR/width), 0.0);
                     setCameraMatrix();
+                    setLightsPos();
+                    glutPostRedisplay();
                     break;
     }
 	LAST_MOUSE_X = x;
     LAST_MOUSE_Y = y;
-    glutPostRedisplay();
 }
 
 void onKeyboardPulse(unsigned char key, int x, int y) {
     float height = glutGet(GLUT_WINDOW_HEIGHT)/(double)(START_HEIGHT);
     float width  = glutGet(GLUT_WINDOW_WIDTH)/(double)(START_WIDTH);
 
+    switch (key) {
+        case '0':   enable_light0 = !enable_light0;
+                    if (enable_light0) glEnable(GL_LIGHT0);
+                    else glDisable(GL_LIGHT0);
+                    break;
+        case '1':   enable_light1 = !enable_light1;
+                    if (enable_light1) glEnable(GL_LIGHT1);
+                    else glDisable(GL_LIGHT1);
+                    break;
+        case '2':   enable_light2 = !enable_light2;
+                    if (enable_light2) glEnable(GL_LIGHT2);
+                    else glDisable(GL_LIGHT2);
+                    break;
+        case 'a':   models[0].increaseAngles(0, 3, 0);
+                    break;
+        case 'd':   models[0].increaseAngles(0,-3, 0);
+                    break;
+        case 'h':   help();
+                    break;
+        case 'i':   enable_light = !enable_light;
+                    if (enable_light) glEnable(GL_LIGHTING);
+                    else glDisable(GL_LIGHTING);
+                    break;
+        case 'm':   changeLight0Pos();
+                    break;
+        case 'n':   norm_vert = !norm_vert;
+                    break;
+        case 'r':   initCamera(SPHERE_RAD);
+                    setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
+                    updateCamera(height, width);
+                    setCameraMatrix();
+                    models[0].setAngles(0.0, 0.0, 0.0);
+                    models[0].setPosition(model0_place);
+                    initLightVariables();
+                    setLightsPos();
+                    break;
+        case 's':   models[0].walk(-velocity);
+                    setLight2Pos();
+                    break;
+        case 'v':   draw_walls = !draw_walls;
+                    break;
+        case 'w':   models[0].walk(velocity);
+                    setLight2Pos();
+                    break;
+        case 'x':   decreaseVelocity();
+                    break;
+        case 'z':   increaseVelocity();
+                    break;
+        case (char)27:  close();
+                        break;
+    }
     if (MODE == 'c' || MODE == 't') {
         switch (key) {
-            case 'a':   models[0].increaseAngles(0, 3, 0);
-                        updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
-                        glutPostRedisplay();
+            case 'a':   updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                        setLightsPos();
                         break;
             case 'c':   updateCamera(height, width);
                         setCameraMatrix();
-                        glutPostRedisplay();
+                        setLightsPos();
                         MODE = 'e';
                         break;
-            case 'd':   models[0].increaseAngles(0,-3, 0);
-                        updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
-                        glutPostRedisplay();
+            case 'd':   updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                        setLightsPos();
                         break;
-            case 'h':   help2();
+            case 'h':   helpPatriCam();
                         break;
-            case 'i':   enable_light = !enable_light;
-                        if (enable_light) glEnable(GL_LIGHTING);
-                        else glDisable(GL_LIGHTING);
-                        glutPostRedisplay();
+            case 's':   updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                        setLightsPos();
                         break;
-            case 's':   models[0].walk(-velocity);
-                        updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
-                        glutPostRedisplay();
+            case 'w':   updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                        setLightsPos();
                         break;
-			case 'v':	draw_walls = !draw_walls;
-						glutPostRedisplay();
-						break;
-            case 'w':   models[0].walk(velocity);
-                        updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
-                        glutPostRedisplay();
-                        break;
-            case 'x':   decreaseVelocity();
-                        break;
-            case 'y':   status2();
-                        break;
-            case 'z':   increaseVelocity();
-                        break;
-            case (char)27:  close();
-                            break;
         }
 		if (MODE == 't' && key == 't') {
 			MODE = 'c';
 			resetAlfaBeta();
 			updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
-			glutPostRedisplay();
+            setLightsPos();
 		} else if (key == 't'){
 			MODE = 't';
 		}
@@ -370,71 +450,34 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
     else {
         MODE = key;
         switch (key) {
-            case 'a':   models[0].increaseAngles(0, 3, 0);
-                        glutPostRedisplay();
-                        break;
-            case 'd':   models[0].increaseAngles(0,-3, 0);
-                        glutPostRedisplay();
-                        break;
-            case 'w':   models[0].walk(velocity);
-                        glutPostRedisplay();
-                        break;
-            case 's':   models[0].walk(-velocity);
-                        glutPostRedisplay();
-                        break;
-            case 'h':   help();
-                        break;
-            case 'i':   enable_light = !enable_light;
-                        if (enable_light) glEnable(GL_LIGHTING);
-                        else glDisable(GL_LIGHTING);
-                        glutPostRedisplay();
+            case 'h':   helpExternCam();
                         break;
             case '+':   ROTATION_FACTOR *= 1.3;
                         break;
             case '-':   ROTATION_FACTOR /= 1.3;
                         break;
-            case 'y':   status();
-                        break;
             case 'p':   changeCameraType();
-                        glutPostRedisplay();
                         break;
-            case 'r':   initCamera(SPHERE_RAD);
-                        setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
+            case 'j':   incrementCamDist(SPHERE_RAD/15);
                         updateCamera(height, width);
-                        setCameraMatrix();
-                        glutPostRedisplay();
-                        break;
-            case 'm':   incrementCamDist(SPHERE_RAD/15);
-                        updateCamera(height, width);
-                        glutPostRedisplay();
-                        break;
-            case 'n':   norm_vert = !norm_vert;
-                        glutPostRedisplay();
                         break;
             case 'k':   incrementCamDist(-SPHERE_RAD/15);
                         updateCamera(height, width);
-                        glutPostRedisplay();
                         break;
             case 'o':   zoomOut();
                         updateCamera(height, width);
-                        glutPostRedisplay();
                         break;
             case 'l':   zoomIn();
                         updateCamera(height, width);
-                        glutPostRedisplay();
                         break;
             case 'c':   initPersonalCam(height, width);
 				        updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
-						glutPostRedisplay();
+                        setLightsPos();
                         MODE = 'c';
                         break;
-			case 'v':	draw_walls = !draw_walls;
-						glutPostRedisplay();
-						break;
-            case (char)27:  close();
-                            break;
         }
     }
+    glutPostRedisplay();
 }
 
 void onKeyboardSpecialPulse(int key, int x, int y) {
@@ -442,18 +485,22 @@ void onKeyboardSpecialPulse(int key, int x, int y) {
 		switch(key) {
 			case GLUT_KEY_UP:	increaseBeta();
 								updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                                setLightsPos();
 								glutPostRedisplay();
 								break;
 			case GLUT_KEY_DOWN:	decreaseBeta();
 								updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                                setLightsPos();
 								glutPostRedisplay();
 								break;
 			case GLUT_KEY_RIGHT:	decreaseAlfa();
 									updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                                    setLightsPos();
 									glutPostRedisplay();
 									break;
 			case GLUT_KEY_LEFT:	increaseAlfa();
 								updatePersonalCam(models[0].getPosition(), models[0].getAngleY());
+                                setLightsPos();
 								glutPostRedisplay();
 								break;
 		}
@@ -531,8 +578,6 @@ double calcMinContainerBoxScene(Point &min, Point &max) {
         if (mins[i].z < min.z) min.z = mins[i].z;
         if (maxs[i].z > max.z) max.z = maxs[i].z;
     }
-    cout << max.x << " " << max.y << " " << max.z << endl;
-    cout << min.x << " " << min.y << " " << min.z << endl;
 }
 
 double calcMinSphereRadius() {
@@ -554,7 +599,11 @@ void initGlobalVars(const char *argv[]) {
     SPHERE_RAD = calcMinSphereRadius();
 	initPersonalCamVars();
 	draw_walls = true;
-    enable_light = true;
+
+    initLightVariables();
+    initLight0(5.0, 0.1, -5.0);
+    initLight1();
+    initLight2();
 }
 
 /**
@@ -564,7 +613,7 @@ void initGL() {
     glClearColor(0, 0, 0, 1);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);    
+    glEnable(GL_LIGHT1);
     glEnable(GL_NORMALIZE);
 }
 
@@ -603,6 +652,7 @@ int main(int argc, const char *argv[]) {
     initCamera(SPHERE_RAD);
     setCamDist(SPHERE_RAD + 0.5, 0.5, SPHERE_RAD*2+0.5);
     setCameraMatrix();
+    setLightsPos();
 
     // GLUT events loop
     glutMainLoop();
