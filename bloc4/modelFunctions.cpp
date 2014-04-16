@@ -23,6 +23,18 @@ struct Point {
 
 #endif
 
+#define PAINT_VERTEX(_j) {\
+    if ((_j) < triangles[i].n.size() && norm_vertex) {\
+        double* norm = &normal[triangles[i].n[(_j)]];\
+        glNormal3f(*(norm), *(norm + 1), *(norm + 2));\
+    }\
+    else {\
+        glNormal3f(triangles[i].normalC[0], triangles[i].normalC[1], triangles[i].normalC[2]);\
+    }\
+    int num = triangles[i].v[(_j)];\
+    glVertex3f(vertex[num], vertex[num + 1], vertex[num + 2]);\
+}
+
 class ModelLoader {
 
 private:
@@ -107,28 +119,33 @@ public:
         vector<Face> triangles = model.faces();
         vector<Vertex> vertex = model.vertices();
         vector<Vertex> normal = model.normals();
+        int last_mat;
+        if (0 < triangles.size()) {
+            last_mat = triangles[0].mat;
+            if (last_mat >= 0 && last_mat < Materials.size()) {
+                const float* colors = Materials[last_mat].diffuse;
+                glColor3f(*colors, *(colors + 1), *(colors + 2));
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, Materials[last_mat].ambient);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, colors);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, Materials[last_mat].specular);
+                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, Materials[last_mat].shininess);
+            }
+        }
         for (int i = 0; i < triangles.size(); ++i) {
             glBegin(GL_TRIANGLES);
             int mat = triangles[i].mat;
-            if (mat >= 0 && mat < Materials.size()) {
+            if (mat >= 0 && mat < Materials.size() && mat != last_mat) {
                 const float* colors = Materials[mat].diffuse;
                 glColor3f(*colors, *(colors + 1), *(colors + 2));
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, Materials[mat].ambient);
                 glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, colors);
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, Materials[mat].specular);
                 glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, Materials[mat].shininess);
+                last_mat = mat;
             }
-            for (int j = 0; j < 3; ++j) {
-                if (j < triangles[i].n.size() && norm_vertex) {
-                    double* norm = &normal[triangles[i].n[j]];
-                    glNormal3f(*(norm), *(norm + 1), *(norm + 2));
-                }
-                else {
-                    glNormal3f(triangles[i].normalC[0], triangles[i].normalC[1], triangles[i].normalC[2]);
-                }
-                int num = triangles[i].v[j];
-                glVertex3f(vertex[num], vertex[num + 1], vertex[num + 2]);
-            }
+            PAINT_VERTEX(0);
+            PAINT_VERTEX(1);
+            PAINT_VERTEX(2);
             glEnd();
         }
         glPopMatrix();
