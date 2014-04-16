@@ -25,6 +25,7 @@ struct Point {
 #endif
 
 /** PROGRAM CONSTATNS **/
+#define DIVS_FLOOR 4
 #define model0_height 1
 #define model1_height 1.5
 const Point model0_place = {0, 0.5, 0};
@@ -150,11 +151,13 @@ void status2() {
     cout << "-------------------------------------------------------" << endl;
 }
 
+/**
+  * Display usage information
+  */ 
 void usage() {
     cout << endl;
     cout << "Usage: file_with_model" << endl;
 }
-
 
 /**
   * Paint the axes of current object
@@ -174,22 +177,27 @@ void paintAxes() {
     glEnd();
 }
 
-void paintFloor() {    
-    glColor3f (0.0, 0.0, 1.0);
-    float vec1[] = {0.0, 0.0, 1.0, 0.1};
+void paintFloor() {
+    glColor3f (1, 0.3, 0);
+    float vec1[] = {1, 0.3, 0, 0.1};
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, vec1);
-    float vec2[] = {0.0, 0.0, 1.0, 0.6};
+    float vec2[] = {1, 0.3, 0, 0.6};
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, vec2);
-    float vec3[] = {0.0, 0.0, 1.0, 0.9};
+    float vec3[] = {1, 0.3, 0, 0.9};
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec3);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 40.0);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0);
     glNormal3f(0, 1, 0);
-    glBegin(GL_QUADS);
-        glVertex3f( 5, 0, 5);
-        glVertex3f(-5, 0, 5);
-        glVertex3f(-5, 0,-5);
-        glVertex3f( 5, 0,-5);
-    glEnd();
+    float factor = 10.0/(float)DIVS_FLOOR;
+    for (float x = -factor; x <= 5; x += factor) {
+        for (float z = -factor; z <= 5; z += factor) {
+            glBegin(GL_QUADS);
+                glVertex3f( x, 0, z);
+                glVertex3f( x-factor, 0, z);
+                glVertex3f( x-factor, 0, z-factor);
+                glVertex3f( x, 0, z-factor);
+            glEnd();
+        }
+    }
 }
 
 void paintWalls() {
@@ -243,11 +251,14 @@ void paintSnowMan(Point center) {
 
 /* ----------------------- CALLBACKS ----------------------- */
 
+/**
+ * Callback for refresh events
+ */
 void refresh () {
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
-        glRotated(0, 1, 0, 0);
-        glScaled(SCALE, SCALE, SCALE);
+        //glRotated(0, 1, 0, 0);
+        //glScaled(SCALE, SCALE, SCALE);
         paintFloor();
         if (draw_walls) paintWalls();
         paintSnowMan({ 2.5, 0, 2.5});
@@ -359,6 +370,18 @@ void onKeyboardPulse(unsigned char key, int x, int y) {
     else {
         MODE = key;
         switch (key) {
+            case 'a':   models[0].increaseAngles(0, 3, 0);
+                        glutPostRedisplay();
+                        break;
+            case 'd':   models[0].increaseAngles(0,-3, 0);
+                        glutPostRedisplay();
+                        break;
+            case 'w':   models[0].walk(velocity);
+                        glutPostRedisplay();
+                        break;
+            case 's':   models[0].walk(-velocity);
+                        glutPostRedisplay();
+                        break;
             case 'h':   help();
                         break;
             case 'i':   enable_light = !enable_light;
@@ -547,8 +570,10 @@ void initGL() {
 
 /* ------------------- END OF INITIAL CALCS ------------------ */
 
-/* ----------------------- MAIN FUNCTION --------------------- */
 
+/**
+  * Main function
+  */ 
 int main(int argc, const char *argv[]) {
     // Check num of paramaters
     if (argc != NUM_EXPECTED_PARAMETERS) {
@@ -560,7 +585,7 @@ int main(int argc, const char *argv[]) {
     glutInit(&argc, ((char **)argv));
     glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA);
     glutInitWindowSize(START_HEIGHT, START_WIDTH);
-    glutCreateWindow("IDI: Bloc 3");
+    glutCreateWindow("IDI: Bloc 4");
 
     // Registre de Callbacks
     glutDisplayFunc(refresh);
